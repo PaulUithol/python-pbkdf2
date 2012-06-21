@@ -59,15 +59,22 @@ import sys
 
 try:
     # Use PyCrypto (if available).
-    from Crypto.Hash import HMAC, SHA as SHA1
+    from Crypto.Hash import HMAC, SHA as SHA1, SHA256, SHA512
 except ImportError:
     # PyCrypto not available.  Use the Python standard library.
     import hmac as HMAC
     try:
-        from hashlib import sha1 as SHA1
+        from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
     except ImportError:
         # hashlib not available.  Use the old sha module.
-        import sha as SHA1
+        import sha as sha1
+
+# A dict of supported hash functions, to get from a string to digestmodule
+algorithms = {
+    'sha1': SHA1,
+    'sha256': SHA256,
+    'sha512': SHA512
+}
 
 #
 # Python 2.1 thru 3.2 compatibility
@@ -227,7 +234,8 @@ class PBKDF2(object):
             del self.__buf
             self.closed = True
 
-def crypt(word, salt=None, iterations=None):
+
+def crypt(word, salt=None, iterations=4096, digestmodule=SHA1):
     """PBKDF2-based unix crypt(3) replacement.
 
     The number of iterations specified in the salt overrides the 'iterations'
@@ -256,16 +264,22 @@ def crypt(word, salt=None, iterations=None):
 
     # Try to extract the real salt and iteration count from the salt
     if salt.startswith("$p5k2$"):
-        (iterations, salt, dummy) = salt.split("$")[2:5]
-        if iterations == "":
-            iterations = 400
+        (digest_name, iterations, salt) = salt.split("$")[2:5]
+
+        converted = int(iterations, 16)
+        if iterations != "%x" % converted:  # lowercase hex, minimum digits
+            raise ValueError("Invalid salt")
+        iterations = converted
+        if not (iterations >= 1):
+            raise ValueError("Invalid salt")
+
+        if digest_name in algorithms:
+            digestmodule = algorithms[ digest_name ]
         else:
-            converted = int(iterations, 16)
-            if iterations != "%x" % converted:  # lowercase hex, minimum digits
-                raise ValueError("Invalid salt")
-            iterations = converted
-            if not (iterations >= 1):
-                raise ValueError("Invalid salt")
+            raise ValueError("Digest algorithm=%s not supported!" % digest_name)
+
+    # Instantiate a `digestmodule`, so we can inspect it's `name` and `digest_size`
+    digest = digestmodule()
 
     # Make sure the salt matches the allowed character set
     allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./"
@@ -273,12 +287,9 @@ def crypt(word, salt=None, iterations=None):
         if ch not in allowed:
             raise ValueError("Illegal character %r in salt" % (ch,))
 
-    if iterations is None or iterations == 400:
-        iterations = 400
-        salt = "$p5k2$$" + salt
-    else:
-        salt = "$p5k2$%x$%s" % (iterations, salt)
-    rawhash = PBKDF2(word, salt, iterations).read(24)
+    salt = "$p5k2$%s$%x$%s" % (digest.name.lower(),  iterations, salt)
+
+    rawhash = PBKDF2(word, salt, iterations, digestmodule).read( digest.digest_size )
     return salt + "$" + b64encode(rawhash, "./")
 
 # Add crypt as a static method of the PBKDF2 class
