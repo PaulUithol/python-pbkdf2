@@ -67,9 +67,9 @@ except ImportError:
         from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
     except ImportError:
         # hashlib not available.  Use the old sha module.
-        import sha as sha1
+        import sha as SHA1
 
-# A dict of supported hash functions, to get from a string to digestmodule
+# A dict of supported hash functions, to get from a string (as stored as part of `crypt`'s output) to a digestmodule
 algorithms = {
     'sha1': SHA1,
     'sha256': SHA256,
@@ -241,7 +241,7 @@ def crypt(word, salt=None, iterations=4096, digestmodule=SHA1):
     The number of iterations specified in the salt overrides the 'iterations'
     parameter.
 
-    The effective hash length is 192 bits.
+    The effective hash length is dependant on the used `digestmodule`.
     """
 
     # Generate a (pseudo-)random salt if the user hasn't provided one.
