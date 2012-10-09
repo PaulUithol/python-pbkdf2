@@ -67,7 +67,7 @@ except ImportError:
         from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
     except ImportError:
         # hashlib not available.  Use the old sha module.
-        import sha as SHA1
+        from sha import sha as SHA1
 
 # A dict of supported hash functions, to get from a string (as stored as part of `crypt`'s output) to a digestmodule
 algorithms = {
