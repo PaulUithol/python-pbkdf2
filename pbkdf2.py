@@ -59,7 +59,11 @@ import sys
 
 try:
     # Use PyCrypto (if available).
-    from Crypto.Hash import HMAC, SHA as SHA1, SHA256, SHA512
+    from Crypto.Hash import HMAC
+	from Crypto.Hash.SHA import new as SHA1
+	# The interface for SHA256 seems to be lacking. For instance, there's no `name` property..
+	#from Crypto.Hash.SHA256 import new as SHA256
+	from Crypto.Hash.SHA512 import new as SHA512
 except ImportError:
     # PyCrypto not available.  Use the Python standard library.
     import hmac as HMAC
@@ -142,7 +146,7 @@ class PBKDF2(object):
     """
 
     def __init__(self, passphrase, salt, iterations=1000,
-                 digestmodule=SHA1, macmodule=HMAC):
+                 digestmodule=SHA512, macmodule=HMAC):
         self.__macmodule = macmodule
         self.__digestmodule = digestmodule
         self._setup(passphrase, salt, iterations, self._pseudorandom)
@@ -235,7 +239,7 @@ class PBKDF2(object):
             self.closed = True
 
 
-def crypt(word, salt=None, iterations=4096, digestmodule=SHA1):
+def crypt(word, salt=None, iterations=4096, digestmodule=SHA512):
     """PBKDF2-based unix crypt(3) replacement.
 
     The number of iterations specified in the salt overrides the 'iterations'
