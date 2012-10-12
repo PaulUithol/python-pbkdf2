@@ -60,18 +60,15 @@ import sys
 try:
     # Use PyCrypto (if available).
     from Crypto.Hash import HMAC
-	from Crypto.Hash.SHA import new as SHA1
-	# The interface for SHA256 seems to be lacking. For instance, there's no `name` property..
-	#from Crypto.Hash.SHA256 import new as SHA256
-	from Crypto.Hash.SHA512 import new as SHA512
+    from Crypto.Hash.SHA import new as SHA1
+    from Crypto.Hash.SHA512 import new as SHA512
+    # The interface for SHA256 seems to be lacking. For instance, there's no `name` property..
+    #from Crypto.Hash.SHA256 import new as SHA256
+    from hashlib import sha256 as SHA256
 except ImportError:
     # PyCrypto not available.  Use the Python standard library.
     import hmac as HMAC
-    try:
-        from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
-    except ImportError:
-        # hashlib not available.  Use the old sha module.
-        from sha import sha as SHA1
+    from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
 
 # A dict of supported hash functions, to get from a string (as stored as part of `crypt`'s output) to a digestmodule
 algorithms = {
