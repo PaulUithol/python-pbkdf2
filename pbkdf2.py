@@ -57,9 +57,14 @@ from random import randint
 import string
 import sys
 
-# Use the Python standard library.
+
+# Use the Python standard library. The PyCrypto interface seems to be inconsistent for crypto algorithms (sometimes no `name`, etc).
 import hmac as HMAC
-from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
+try:
+	from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
+except ImportError:
+	# hashlib not available.  Use the old sha module.
+	from sha import sha as SHA1
 
 # A dict of supported hash functions, to get from a string (as stored as part of `crypt`'s output) to a digestmodule
 algorithms = {
@@ -133,8 +138,7 @@ class PBKDF2(object):
     passphrases they are derived from.
     """
 
-    def __init__(self, passphrase, salt, iterations=1000,
-                 digestmodule=SHA512, macmodule=HMAC):
+    def __init__(self, passphrase, salt, iterations=1000, digestmodule=SHA1, macmodule=HMAC):
         self.__macmodule = macmodule
         self.__digestmodule = digestmodule
         self._setup(passphrase, salt, iterations, self._pseudorandom)
