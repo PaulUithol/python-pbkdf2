@@ -121,27 +121,27 @@ class TestPBKDF2(unittest.TestCase):
 
         # Default algorithm is `sha1`; default number of rounds is 4096
         result = crypt("secret", "XXXXXXXX")
-        expected = '$p5k2$sha1$1000$XXXXXXXX$'
-        self.assertEqual(expected, result[:25])
+        expected = '$p5k2$sha512$1000$XXXXXXXX$'
+        self.assertEqual(expected, result[:27])
 
         # 400 iterations
         result = crypt("secret", "XXXXXXXX", 400)
-        expected = '$p5k2$sha1$190$XXXXXXXX$'
-        self.assertEqual(expected, result[:24])
+        expected = '$p5k2$sha512$190$XXXXXXXX$'
+        self.assertEqual(expected, result[:26])
 
         # 400 iterations (keyword argument)
         result = crypt("spam", "FRsH3HJB", iterations=400)
-        expected = '$p5k2$sha1$190$FRsH3HJB$'
-        self.assertEqual(expected, result[:24])
+        expected = '$p5k2$sha512$190$FRsH3HJB$'
+        self.assertEqual(expected, result[:26])
 
         # 1000 iterations
         result = crypt("spam", "H0NX9mT/", iterations=1000)
-        expected = '$p5k2$sha1$3e8$H0NX9mT/$'
-        self.assertEqual(expected, result[:24])
+        expected = '$p5k2$sha512$3e8$H0NX9mT/$'
+        self.assertEqual(expected, result[:26])
 
         # 1000 iterations (iterations count taken from salt parameter)
         expected = '$p5k2$sha1$3e8$H0NX9mT/$ih6FhDyRXAaEN4UXk50pNsZP/nU='
-        result = crypt("spam", expected)
+        result = crypt("spam", expected, digestmodule=SHA1)
         self.assertEqual(expected, result)
 
         # Feed the result back in; both hashes should match, as the algo and iteration count are taken from the expected hash
@@ -195,7 +195,7 @@ class TestPBKDF2(unittest.TestCase):
         #
 
         # crypt 1
-        result = crypt("cloadm", "exec", iterations=400)
+        result = crypt("cloadm", "exec", iterations=400, digestmodule=SHA1)
         expected = '$p5k2$sha1$190$exec$jkxkBaZJp.nvBg4WV7BW96972fE='
         self.assertEqual(expected, result)
 
@@ -205,7 +205,7 @@ class TestPBKDF2(unittest.TestCase):
         self.assertEqual(expected, result)
 
         # crypt 3
-        result = crypt("dcl", "tUsch7fU", iterations=13)
+        result = crypt("dcl", "tUsch7fU", iterations=13, digestmodule=SHA1)
         expected = "$p5k2$sha1$d$tUsch7fU$.8H47sUSBmz0PDHbKfXHkjDDboo="
         self.assertEqual(expected, result)
 

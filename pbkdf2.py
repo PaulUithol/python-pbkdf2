@@ -274,7 +274,7 @@ def crypt(word, salt=None, iterations=4096, digestmodule=SHA512):
     digest = digestmodule()
 
     # Make sure the salt matches the allowed character set
-    allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+./_"
+    allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./"
     for ch in salt:
         if ch not in allowed:
             raise ValueError("Illegal character %r in salt" % (ch,))
@@ -282,21 +282,19 @@ def crypt(word, salt=None, iterations=4096, digestmodule=SHA512):
     salt = "$p5k2$%s$%x$%s" % (digest.name.lower(),  iterations, salt)
 
     rawhash = PBKDF2(word, salt, iterations, digestmodule).read( digest.digest_size )
-    # Use underscores as replacement characters for `+` and `/`; these seem to be the least harmful in urls, paths, databases, etc.
-    return salt + "$" + b64encode(rawhash, "__")
+    return salt + "$" + b64encode(rawhash, "./")
 
 # Add crypt as a static method of the PBKDF2 class
 # This makes it easier to do "from PBKDF2 import PBKDF2" and still use
 # crypt.
 PBKDF2.crypt = staticmethod(crypt)
 
-def _makesalt():
+def _makesalt( altchars="./" ):
     """Return a 48-bit pseudorandom salt for crypt().
 
     This function is not suitable for generating cryptographic secrets.
     """
     binarysalt = b("").join([pack("@H", randint(0, 0xffff)) for i in range(3)])
-    # Use underscores as replacement characters for `+` and `/`; these seem to be the least harmful in urls, paths, databases, etc.
-    return b64encode(binarysalt, "__")
+    return b64encode(binarysalt, altchars)
 
 # vim:set ts=4 sw=4 sts=4 expandtab:
