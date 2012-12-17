@@ -274,7 +274,7 @@ def crypt(word, salt=None, iterations=4096, digestmodule=SHA512):
     digest = digestmodule()
 
     # Make sure the salt matches the allowed character set
-    allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./"
+    allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+./_"
     for ch in salt:
         if ch not in allowed:
             raise ValueError("Illegal character %r in salt" % (ch,))
