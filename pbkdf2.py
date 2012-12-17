@@ -57,18 +57,9 @@ from random import randint
 import string
 import sys
 
-try:
-    # Use PyCrypto (if available).
-    from Crypto.Hash import HMAC
-    from Crypto.Hash.SHA import new as SHA1
-    from Crypto.Hash.SHA512 import new as SHA512
-    # The interface for SHA256 seems to be lacking. For instance, there's no `name` property..
-    #from Crypto.Hash.SHA256 import new as SHA256
-    from hashlib import sha256 as SHA256
-except ImportError:
-    # PyCrypto not available.  Use the Python standard library.
-    import hmac as HMAC
-    from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
+# Use the Python standard library.
+import hmac as HMAC
+from hashlib import sha1 as SHA1, sha256 as SHA256, sha512 as SHA512
 
 # A dict of supported hash functions, to get from a string (as stored as part of `crypt`'s output) to a digestmodule
 algorithms = {
@@ -291,7 +282,8 @@ def crypt(word, salt=None, iterations=4096, digestmodule=SHA512):
     salt = "$p5k2$%s$%x$%s" % (digest.name.lower(),  iterations, salt)
 
     rawhash = PBKDF2(word, salt, iterations, digestmodule).read( digest.digest_size )
-    return salt + "$" + b64encode(rawhash, "./")
+    # Use underscores as replacement characters for `+` and `/`; these seem to be the least harmful in urls, paths, databases, etc.
+    return salt + "$" + b64encode(rawhash, "__")
 
 # Add crypt as a static method of the PBKDF2 class
 # This makes it easier to do "from PBKDF2 import PBKDF2" and still use
@@ -304,6 +296,7 @@ def _makesalt():
     This function is not suitable for generating cryptographic secrets.
     """
     binarysalt = b("").join([pack("@H", randint(0, 0xffff)) for i in range(3)])
-    return b64encode(binarysalt, "./")
+    # Use underscores as replacement characters for `+` and `/`; these seem to be the least harmful in urls, paths, databases, etc.
+    return b64encode(binarysalt, "__")
 
 # vim:set ts=4 sw=4 sts=4 expandtab:
